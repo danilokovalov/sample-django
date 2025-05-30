@@ -1,0 +1,29 @@
+- name: Run Terraform and prepare dynamic inventory
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Init Terraform
+      shell: terraform init
+      args:
+        chdir: ../terraform
+
+    - name: Apply Terraform
+      shell: terraform apply -auto-approve
+      args:
+        chdir: ../terraform
+
+    - name: Get Terraform output
+      shell: terraform output -json > tf_output.json
+      args:
+        chdir: ../terraform
+
+    - name: Copy tf_output.json to Ansible dir
+      copy:
+        src: ../terraform/tf_output.json
+        dest: ./tf_output.json
+
+    - name: Generate inventory.ini
+      command: python3 generate_inventory.py
+      args:
+        chdir: .

@@ -1,0 +1,31 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for db
+
+- name: Install bd
+  become: true
+  package:
+    name: postgresql-server
+    state: present
+
+- name: Initialize bd
+  become: true
+  command: postgresql-setup initdb
+  args:
+    creates: /var/lib/pgsql/data/pg_hba.conf
+
+- name: Start and enable bd
+  become: true
+  service:
+    name: postgresql
+    state: started
+    enabled: true
+
+- name: Set bd password and create bd
+  become: true
+  become_user: postgres
+  shell: |
+    psql -c "CREATE USER django WITH PASSWORD 'django123';"
+    psql -c "CREATE DATABASE sample OWNER django;"
+  args:
+    creates: /var/lib/pgsql/data/sample

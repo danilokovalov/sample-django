@@ -1,0 +1,44 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for deploy
+
+
+- name: Clone Django project
+  git:
+    repo: https://github.com/digitalocean/sample-django.git
+    dest: /home/ec2-user/sample-django
+    version: main
+
+- name: Create virtual environment
+  command: python3 -m venv /home/ec2-user/sample-django/venv
+  args:
+    creates: /home/ec2-user/sample-django/venv
+
+- name: Install requirements
+  command: /home/ec2-user/sample-django/venv/bin/pip install -r requirements.txt
+  args:
+    chdir: /home/ec2-user/sample-django
+
+- name: Update settings.py with DB config
+  replace:
+    path: /home/ec2-user/sample-django/sample/settings.py
+    regexp: "'ENGINE': '.*'"
+    replace: "'ENGINE': 'django.db.backends.postgresql'"
+
+- name: Set allowed hosts
+  lineinfile:
+    path: /home/ec2-user/sample-django/sample/settings.py
+    regexp: "^ALLOWED_HOSTS = .*"
+    line: "ALLOWED_HOSTS = ['*']"
+
+- name: Run migrations
+  command: /home/ec2-user/sample-django/venv/bin/python manage.py migrate
+  args:
+    chdir: /home/ec2-user/sample-django
+
+- name: Start Gunicorn
+  command: |
+    /home/ec2-user/sample-django/venv/bin/gunicorn sample.wsgi:application \
+    --bind 0.0.0.0:8000 --daemon
+  args:
+    chdir: /home/ec2-user/sample-django

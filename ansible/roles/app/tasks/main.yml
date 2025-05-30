@@ -1,0 +1,19 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for app
+- name: Install system packages
+  become: true
+  package:
+    name:
+      - python3
+      - python3-pip
+      - python3-venv
+      - nginx
+    state: present
+
+- name: Start and enable nginx
+  become: true
+  service:
+    name: nginx
+    state: started
+    enabled: true

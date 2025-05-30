@@ -1,0 +1,14 @@
+- name: Configure DB
+  hosts: db
+  roles:
+    - db
+
+- name: Setup Application Servers
+  hosts: app
+  roles:
+    - app
+
+- name: Deploy Django App
+  hosts: app
+  roles:
+    - deploy
