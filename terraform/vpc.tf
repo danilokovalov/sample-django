@@ -92,3 +92,36 @@ resource "aws_route_table_association" "private_db_assoc" {
   subnet_id      = aws_subnet.private_db.id
   route_table_id = aws_route_table.private.id
 }
+
+# Create VPC Endpoints for SSM in the private VPC
+resource "aws_vpc_endpoint" "ssm" {
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.${var.region}.ssm"
+  vpc_endpoint_type = "Interface"
+  subnet_ids        = [aws_subnet.private_app_1.id, aws_subnet.private_app_2.id, aws_subnet.private_db.id]
+  security_group_ids = [aws_security_group.sg_started_pack.id]
+  private_dns_enabled = true
+}
+
+resource "aws_vpc_endpoint" "ssmmessages" {
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.${var.region}.ssmmessages"
+  vpc_endpoint_type = "Interface"
+  subnet_ids        = [aws_subnet.private_app_1.id, aws_subnet.private_app_2.id, aws_subnet.private_db.id]
+  security_group_ids = [aws_security_group.sg_started_pack.id]
+  private_dns_enabled = true
+}
+
+resource "aws_vpc_endpoint" "ec2messages" {
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.${var.region}.ec2messages"
+  vpc_endpoint_type = "Interface"
+  subnet_ids        = [aws_subnet.private_app_1.id, aws_subnet.private_app_2.id, aws_subnet.private_db.id]
+  security_group_ids = [aws_security_group.sg_started_pack.id]
+  private_dns_enabled = true
+}
+
+
+variable "region" {
+  default = "eu-central-1"
+}

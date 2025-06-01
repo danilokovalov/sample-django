@@ -1,29 +1,81 @@
-- name: Run Terraform and prepare dynamic inventory
+- name: Full Infrastructure and App Deployment
   hosts: localhost
   connection: local
-  gather_facts: no
+  gather_facts: false
+
+  vars:
+    terraform_dir: ../terraform
+
   tasks:
+
     - name: Init Terraform
       shell: terraform init
       args:
-        chdir: ../terraform
+        chdir: "{{ terraform_dir }}"
 
     - name: Apply Terraform
-      shell: terraform apply -auto-approve
+      shell: terraform apply -auto-approve -lock=false
       args:
-        chdir: ../terraform
+        chdir: "{{ terraform_dir }}"
 
-    - name: Get Terraform output
+    - name: Get Terraform output as JSON
       shell: terraform output -json > tf_output.json
       args:
-        chdir: ../terraform
+        chdir: "{{ terraform_dir }}"
 
     - name: Copy tf_output.json to Ansible dir
       copy:
-        src: ../terraform/tf_output.json
+        src: "{{ terraform_dir }}/tf_output.json"
         dest: ./tf_output.json
 
-    - name: Generate inventory.ini
-      command: python3 generate_inventory.py
+    - name: Load Terraform outputs
+      set_fact:
+        tf_data: "{{ lookup('file', 'tf_output.json') | from_json }}"
+
+    - name: Set bastion IP
+      set_fact:
+        bastion_ip: "{{ tf_data.bastion_public_ip.value }}"
+
+    - name: Add app hosts with db_private_ip
+      add_host:
+        name: "{{ item }}"
+        groups: app
+        db_private_ip: "{{ tf_data.db_private_ip.value }}"
+      loop:
+        - app1
+        - app2
+
+    - name: Add db host
+      add_host:
+        name: db
+        groups: database
+
+    - name: Add Bastion to known_hosts
+      shell: ssh-keyscan -H {{ bastion_ip }} >> ~/.ssh/known_hosts
+      ignore_errors: true
+
+    - name: Generate ~/.ssh/config SSH over Bastion
+      command: python3 generate_inventory_bastion.py
       args:
         chdir: .
+
+- name: Setup Database Server
+  hosts: database
+  become: true
+  gather_facts: true
+  roles:
+    - db
+
+- name: Setup Application Servers
+  hosts: app
+  become: true
+  gather_facts: true
+  roles:
+    - app
+
+- name: Deploy Django App
+  hosts: app
+  become: true
+  gather_facts: false
+  roles:
+    - deploy

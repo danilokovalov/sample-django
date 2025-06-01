@@ -1,0 +1,6 @@
+- name: Test SSM Connection to all hosts
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Ping each host using SSM
+      ping:

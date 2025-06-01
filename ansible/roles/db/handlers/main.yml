@@ -1,3 +1,8 @@
 #SPDX-License-Identifier: MIT-0
 ---
 # handlers file for db
+- name: Restart PostgreSQL
+  become: true
+  service:
+    name: postgresql
+    state: restarted

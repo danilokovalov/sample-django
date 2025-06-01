@@ -1,31 +1,65 @@
-#SPDX-License-Identifier: MIT-0
+# SPDX-License-Identifier: MIT-0
 ---
 # tasks file for db
 
-- name: Install bd
+- name: Install acl for become_user compatibility
   become: true
-  package:
-    name: postgresql-server
+  apt:
+    name: acl
+    state: present
+    update_cache: true
+
+- name: Install psycopg2 for Ansible PostgreSQL modules
+  become: true
+  apt:
+    name: python3-psycopg2
     state: present
 
-- name: Initialize bd
+- name: Install PostgreSQL server
   become: true
-  command: postgresql-setup initdb
-  args:
-    creates: /var/lib/pgsql/data/pg_hba.conf
+  package:
+    name: postgresql
+    state: present
 
-- name: Start and enable bd
+- name: Allow PostgreSQL to listen on all interfaces
+  become: true
+  lineinfile:
+    path: /etc/postgresql/14/main/postgresql.conf
+    regexp: "^#?listen_addresses =.*"
+    line: "listen_addresses = '*'"
+  notify: Restart PostgreSQL
+
+- name: Allow connections from private subnet in pg_hba.conf
+  become: true
+  lineinfile:
+    path: /etc/postgresql/14/main/pg_hba.conf
+    line: "host    all             all             10.0.0.0/16            md5"
+    insertafter: EOF
+  notify: Restart PostgreSQL
+
+
+- name: Ensure PostgreSQL is started and enabled
   become: true
   service:
     name: postgresql
     state: started
     enabled: true
 
-- name: Set bd password and create bd
+
+
+- name: Ensure PostgreSQL user 'django' exists with password
   become: true
   become_user: postgres
-  shell: |
-    psql -c "CREATE USER django WITH PASSWORD 'django123';"
-    psql -c "CREATE DATABASE sample OWNER django;"
-  args:
-    creates: /var/lib/pgsql/data/sample
+  postgresql_user:
+    name: django
+    password: django123
+    encrypted: false
+    state: present
+
+- name: Ensure PostgreSQL database 'sample' exists owned by 'django'
+  become: true
+  become_user: postgres
+  postgresql_db:
+    name: sample
+    owner: django
+    state: present

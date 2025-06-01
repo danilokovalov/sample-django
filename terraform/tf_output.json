@@ -4,19 +4,54 @@
     "type": "string",
     "value": "app-alb-2110876782.eu-central-1.elb.amazonaws.com"
   },
+  "app1_instance_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "i-0009278ad0bf4fb74"
+  },
   "app1_ip": {
     "sensitive": false,
     "type": "string",
-    "value": "10.0.1.185"
+    "value": "10.0.1.108"
+  },
+  "app1_private_ip": {
+    "sensitive": false,
+    "type": "string",
+    "value": "10.0.1.108"
+  },
+  "app2_instance_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "i-048380047cd3bca98"
   },
   "app2_ip": {
     "sensitive": false,
     "type": "string",
-    "value": "10.0.2.15"
+    "value": "10.0.2.187"
+  },
+  "app2_private_ip": {
+    "sensitive": false,
+    "type": "string",
+    "value": "10.0.2.187"
+  },
+  "bastion_public_ip": {
+    "sensitive": false,
+    "type": "string",
+    "value": "18.159.212.28"
+  },
+  "db_instance_id": {
+    "sensitive": false,
+    "type": "string",
+    "value": "i-05317bfd3656eac3b"
   },
   "db_ip": {
     "sensitive": false,
     "type": "string",
-    "value": "10.0.3.21"
+    "value": "10.0.3.188"
+  },
+  "db_private_ip": {
+    "sensitive": false,
+    "type": "string",
+    "value": "10.0.3.188"
   }
 }
